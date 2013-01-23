@@ -39,7 +39,7 @@ describe "ApiAuth" do
         @request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
           'content-type' => 'text/plain',
           'content-md5' => '1B2M2Y8AsgTpgAmY7PhCfg==',
-          'date' => Time.now.utc.httpdate)
+          'date' => ApiAuth::Helpers.time_as_httpdate)
         @signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
       end
 
@@ -111,7 +111,7 @@ describe "ApiAuth" do
       before(:each) do
         headers = { 'Content-MD5' => "1B2M2Y8AsgTpgAmY7PhCfg==",
                     'Content-Type' => "text/plain",
-                    'Date' => Time.now.utc.httpdate }
+                    'Date' => ApiAuth::Helpers.time_as_httpdate }
         @request = RestClient::Request.new(:url => "/resource.xml?foo=bar&bar=foo",
           :headers => headers,
           :method => :put)
@@ -192,7 +192,7 @@ describe "ApiAuth" do
       before(:each) do
         headers = { 'Content-MD5' => "e59ff97941044f85df5297e1c302d260",
                     'Content-Type' => "text/plain",
-                    'Date' => Time.now.utc.httpdate }
+                    'Date' => ApiAuth::Helpers.time_as_httpdate }
         @request = Curl::Easy.new("/resource.xml?foo=bar&bar=foo") do |curl|
           curl.headers = headers
         end
@@ -252,7 +252,7 @@ describe "ApiAuth" do
           'REQUEST_METHOD' => 'PUT',
           'CONTENT_MD5' => '1B2M2Y8AsgTpgAmY7PhCfg==',
           'CONTENT_TYPE' => 'text/plain',
-          'HTTP_DATE' => Time.now.utc.httpdate)
+          'HTTP_DATE' => ApiAuth::Helpers.time_as_httpdate)
         @signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
       end
 
@@ -336,7 +336,7 @@ describe "ApiAuth" do
         @request.headers.merge!({
           'content-type' => 'text/plain',
           'content-md5'  => '1B2M2Y8AsgTpgAmY7PhCfg==',
-          'date'         => Time.now.utc.httpdate
+          'date'         => ApiAuth::Helpers.time_as_httpdate
         })
         @headers = ApiAuth::Headers.new(@request)
         @signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)

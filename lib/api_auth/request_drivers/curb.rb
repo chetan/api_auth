@@ -45,7 +45,7 @@ module ApiAuth
       end
 
       def set_date
-        @request.headers.merge!({ "DATE" => Time.now.utc.httpdate })
+        @request.headers.merge!({ "DATE" => time_as_httpdate })
       end
 
       def timestamp

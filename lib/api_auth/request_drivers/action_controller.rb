@@ -60,7 +60,7 @@ module ApiAuth
       end
 
       def set_date
-        @request.env['DATE'] = Time.now.utc.httpdate
+        @request.env['DATE'] = time_as_httpdate
       end
 
       def timestamp
