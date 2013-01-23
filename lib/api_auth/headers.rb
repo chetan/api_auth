@@ -53,15 +53,15 @@ module ApiAuth
     end
 
     def set_date
-      @request.set_date if @request.timestamp.blank?
+      @request.set_date if blank? @request.timestamp
     end
 
     def calculate_md5
-      @request.populate_content_md5 if @request.content_md5.blank?
+      @request.populate_content_md5 if blank? @request.content_md5
     end
 
     def md5_mismatch?
-      if @request.content_md5.blank?
+      if blank? @request.content_md5
         false
       else
         @request.md5_mismatch?
@@ -75,6 +75,15 @@ module ApiAuth
     # header already in place.
     def sign_header(header)
       @request.set_auth_header header
+    end
+
+
+    private
+
+    # Test if the given string is nil or empty
+    # Rails compat fix
+    def blank?(str)
+      str.nil? or str.empty?
     end
 
   end
