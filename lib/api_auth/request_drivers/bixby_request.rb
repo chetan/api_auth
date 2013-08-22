@@ -22,17 +22,11 @@ module ApiAuth
       end
 
       def populate_content_md5
-        if @request.class::REQUEST_HAS_BODY
-          @headers["content-md5"] = calculated_md5
-        end
+        @headers["content-md5"] = calculated_md5
       end
 
       def md5_mismatch?
-        if @request.class::REQUEST_HAS_BODY
-          calculated_md5 != content_md5
-        else
-          false
-        end
+        calculated_md5 != content_md5
       end
 
       def content_type
