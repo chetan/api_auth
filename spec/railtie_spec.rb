@@ -37,7 +37,7 @@ describe "Rails integration" do
 
       def rescue_action(e); raise(e); end
     end
-    ActionController::Routing::Routes.draw {|map| map.resources :test }
+    # ActionController::Routing::Routes.draw {|map| map.resources :test }
 
     it "should permit a request with properly signed headers" do
       request = ActionController::TestRequest.new
