@@ -2,7 +2,7 @@ module ApiAuth
 
   module RequestDrivers # :nodoc:
 
-    class ActionControllerRequest # :nodoc:
+    class RackRequest # :nodoc:
 
       include ApiAuth::Helpers
 
@@ -13,14 +13,14 @@ module ApiAuth
       end
 
       def set_auth_header(header)
-        @request.env["Authorization"] = header
+        @request.env.merge!({ "Authorization" => header })
         @headers = fetch_headers
         @request
       end
 
       def calculated_md5
         if @request.body
-          body = @request.raw_post
+          body = @request.body.read
         else
           body = ''
         end
@@ -28,13 +28,13 @@ module ApiAuth
       end
 
       def populate_content_md5
-        if @request.put? || @request.post?
+        if ['POST', 'PUT'].include?(@request.request_method)
           @request.env["Content-MD5"] = calculated_md5
         end
       end
 
       def md5_mismatch?
-        if @request.put? || @request.post?
+        if ['POST', 'PUT'].include?(@request.request_method)
           calculated_md5 != content_md5
         else
           false
@@ -51,16 +51,16 @@ module ApiAuth
       end
 
       def content_md5
-        value = find_header(%w(CONTENT-MD5 CONTENT_MD5 HTTP_CONTENT_MD5))
+        value = find_header(%w(CONTENT-MD5 CONTENT_MD5))
         value.nil? ? "" : value
       end
 
       def request_uri
-        @request.request_uri
+        @request.url
       end
 
       def set_date
-        @request.env['DATE'] = time_as_httpdate
+        @request.env.merge!({ "DATE" => Time.now.utc.httpdate })
       end
 
       def timestamp

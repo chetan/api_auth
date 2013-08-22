@@ -27,6 +27,8 @@ module ApiAuth
         @request = ActionDispatchRequest.new(request)
       when /HTTPI::Request/
         @request = HttpiRequest.new(request)
+      when /Rack::Request/
+        @request = RackRequest.new(request)
       else
         raise UnknownHTTPRequest, "#{request.class.to_s} is not yet supported."
       end
@@ -42,7 +44,7 @@ module ApiAuth
     def canonical_string
       [ @request.content_type,
         @request.content_md5,
-        @request.request_uri,
+        @request.request_uri.gsub(/http:\/\/[^(,|\?|\/)]*/,''), # remove host
         @request.timestamp
       ].join(",")
     end
