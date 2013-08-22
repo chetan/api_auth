@@ -38,27 +38,33 @@ describe "Rails integration" do
       def rescue_action(e); raise(e); end
     end
     # ActionController::Routing::Routes.draw {|map| map.resources :test }
+    class Foo < Rails::Application
+    end
+    Foo.config.secret_key_base = "bar"
+    Foo.routes.draw do
+      resource :test
+    end
 
     it "should permit a request with properly signed headers" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.env['DATE'] = ApiAuth::Helpers.time_as_httpdate
       request.action = 'index'
       request.path = "/index"
       ApiAuth.sign!(request, "1044", API_KEY_STORE["1044"])
-      TestController.new.process(request, ActionController::TestResponse.new).code.should == "200"
+      TestController.new.process(request, ActionDispatch::TestResponse.new).code.should == "200"
     end
 
     it "should forbid a request with properly signed headers but timestamp > 15 minutes" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.env['DATE'] = "Mon, 23 Jan 1984 03:29:56 GMT"
       request.action = 'index'
       request.path = "/index"
       ApiAuth.sign!(request, "1044", API_KEY_STORE["1044"])
-      TestController.new.process(request, ActionController::TestResponse.new).code.should == "401"
+      TestController.new.process(request, ActionDispatch::TestResponse.new).code.should == "401"
     end
 
     it "should insert a DATE header in the request when one hasn't been specified" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.action = 'index'
       request.path = "/index"
       ApiAuth.sign!(request, "1044", API_KEY_STORE["1044"])
@@ -66,23 +72,23 @@ describe "Rails integration" do
     end
 
     it "should forbid an unsigned request to a protected controller action" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.action = 'index'
-      TestController.new.process(request, ActionController::TestResponse.new).code.should == "401"
+      TestController.new.process(request, ActionDispatch::TestResponse.new).code.should == "401"
     end
 
     it "should forbid a request with a bogus signature" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.action = 'index'
       request.env['Authorization'] = "APIAuth bogus:bogus"
-      TestController.new.process(request, ActionController::TestResponse.new).code.should == "401"
+      TestController.new.process(request, ActionDispatch::TestResponse.new).code.should == "401"
     end
 
     it "should allow non-protected controller actions to function as before" do
-      request = ActionController::TestRequest.new
+      request = ActionDispatch::TestRequest.new
       request.action = 'public'
       request.path('/public')
-      TestController.new.process(request, ActionController::TestResponse.new).code.should == "200"
+      TestController.new.process(request, ActionDispatch::TestResponse.new).code.should == "200"
     end
 
   end

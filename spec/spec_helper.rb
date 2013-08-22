@@ -7,6 +7,7 @@ require 'rest_client'
 require 'curb'
 require 'httpi'
 
+require 'rails'
 require 'active_support'
 require 'active_support/test_case'
 require 'action_controller'
