@@ -484,37 +484,40 @@ describe "ApiAuth" do
 
     end
 
-    describe "with Bixby::WebSocket::AsyncRequest" do
+    describe "with Bixby::SignedJsonRequest" do
 
       before(:each) do
-        @request = Bixby::WebSocket::AsyncRequest.new("http://localhost/resource.xml?foo=bar&bar=foo")
+        @json_req = Bixby::JsonRequest.new("foo", "bar")
+        @request = Bixby::SignedJsonRequest.new(@json_req)
         @request.headers.merge!({
           'content-type' => 'text/plain',
           'content-md5'  => '1B2M2Y8AsgTpgAmY7PhCfg==',
           'date'         => ApiAuth::Helpers.time_as_httpdate
         })
+        @request.body = ""
         @headers = ApiAuth::Headers.new(@request)
         @signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
       end
 
-      it "should return a HTTPI object after signing it" do
-        ApiAuth.sign!(@request, @access_id, @secret_key).class.to_s.should match("Bixby::WebSocket::AsyncRequest")
+      it "should return a Bixby::SignedJsonRequest object after signing it" do
+        ApiAuth.sign!(@request, @access_id, @secret_key).class.to_s.should match("Bixby::SignedJsonRequest")
       end
 
       describe "md5 header" do
         context "not already provided" do
           it "should calculate for empty string" do
-            request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+            request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
               'content-type' => 'text/plain',
               'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
             })
+            request.body = ""
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request.headers['content-md5'].should == Digest::MD5.base64digest('')
           end
 
           it "should calculate for real content" do
-            request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+            request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
               'content-type' => 'text/plain',
               'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
@@ -543,7 +546,7 @@ describe "ApiAuth" do
       end
 
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
-        request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+        request = Bixby::SignedJsonRequest.new(@json_req)
         request.headers.merge!({
           'content-type' => 'text/plain',
           'date' => "Mon, 23 Jan 1984 03:29:56 GMT"

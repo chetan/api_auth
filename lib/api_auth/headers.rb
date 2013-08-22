@@ -17,7 +17,7 @@ module ApiAuth
         @request = CurbRequest.new(request)
       when /ActionController::Request/
         @request = ActionControllerRequest.new(request)
-      when /ActionDispatch::TestRequest/
+      when /Action(Controller|Dispatch)::TestRequest/
         if defined?(ActionDispatch)
           @request = ActionDispatchRequest.new(request)
         else
@@ -29,7 +29,7 @@ module ApiAuth
         @request = HttpiRequest.new(request)
       when /Rack::Request/
         @request = RackRequest.new(request)
-      when /Bixby::WebSocket::AsyncRequest/
+      when /Bixby::SignedJsonRequest/
         @request = BixbyRequest.new(request)
       else
         raise UnknownHTTPRequest, "#{request.class.to_s} is not yet supported."

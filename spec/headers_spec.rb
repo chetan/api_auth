@@ -272,10 +272,11 @@ describe "ApiAuth::Headers" do
     end
   end
 
-  describe "with Bixby::WebSocket::AsyncRequest" do
+  describe "with Bixby::SignedJsonRequest" do
 
     before(:each) do
-      @request = Bixby::WebSocket::AsyncRequest.new("http://localhost/resource.xml?foo=bar&bar=foo")
+      @json_req = Bixby::JsonRequest.new("foo", "bar")
+      @request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
         'content-type' => 'text/plain',
         'content-md5'  => 'e59ff97941044f85df5297e1c302d260',
@@ -285,7 +286,7 @@ describe "ApiAuth::Headers" do
     end
 
     it "should generate the proper canonical string" do
-      @headers.canonical_string.should == CANONICAL_STRING
+      @headers.canonical_string.should == CANONICAL_STRING.gsub("/resource.xml?foo=bar&bar=foo", "/api")
     end
 
     it "should set the authorization header" do
@@ -294,7 +295,7 @@ describe "ApiAuth::Headers" do
     end
 
     it "should set the DATE header if one is not already present" do
-      @request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+      @request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
         'content-type' => 'text/plain',
         'content-md5' => 'e59ff97941044f85df5297e1c302d260'
@@ -304,7 +305,7 @@ describe "ApiAuth::Headers" do
     end
 
     it "should not set the DATE header just by asking for the canonical_string" do
-      request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+      request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
         'content-type' => 'text/plain',
         'content-md5' => 'e59ff97941044f85df5297e1c302d260'
@@ -316,7 +317,7 @@ describe "ApiAuth::Headers" do
 
     context "md5_mismatch?" do
       it "is false if no md5 header is present" do
-        request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+        request = Bixby::SignedJsonRequest.new(@json_req)
         request.headers.merge!({'content-type' => 'text/plain'})
         headers = ApiAuth::Headers.new(request)
         headers.md5_mismatch?.should be_false

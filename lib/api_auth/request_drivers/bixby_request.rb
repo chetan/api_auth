@@ -40,7 +40,7 @@ module ApiAuth
       end
 
       def request_uri
-        @request.id
+        @request.path
       end
 
       def set_date
