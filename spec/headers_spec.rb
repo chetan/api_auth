@@ -166,7 +166,7 @@ describe "ApiAuth::Headers" do
         'CONTENT_MD5' => 'e59ff97941044f85df5297e1c302d260',
         'CONTENT_TYPE' => 'text/plain')
       ApiAuth.sign!(@request, "some access id", "some secret key")
-      @request.headers['DATE'].should_not be_nil
+      @request.headers.env['DATE'].should_not be_nil
     end
 
     it "should not set the DATE header just by asking for the canonical_string" do
@@ -262,6 +262,58 @@ describe "ApiAuth::Headers" do
       it "is false if no md5 header is present" do
         request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
         'content-type' => 'text/plain')
+        headers = ApiAuth::Headers.new(request)
+        headers.md5_mismatch?.should be_false
+      end
+    end
+  end
+
+  describe "with Bixby::WebSocket::AsyncRequest" do
+
+    before(:each) do
+      @request = Bixby::WebSocket::AsyncRequest.new("http://localhost/resource.xml?foo=bar&bar=foo")
+      @request.headers.merge!({
+        'content-type' => 'text/plain',
+        'content-md5'  => 'e59ff97941044f85df5297e1c302d260',
+        'date'         => "Mon, 23 Jan 1984 03:29:56 GMT"
+      })
+      @headers = ApiAuth::Headers.new(@request)
+    end
+
+    it "should generate the proper canonical string" do
+      @headers.canonical_string.should == CANONICAL_STRING
+    end
+
+    it "should set the authorization header" do
+      @headers.sign_header("alpha")
+      @headers.authorization_header.should == "alpha"
+    end
+
+    it "should set the DATE header if one is not already present" do
+      @request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+      @request.headers.merge!({
+        'content-type' => 'text/plain',
+        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+      })
+      ApiAuth.sign!(@request, "some access id", "some secret key")
+      @request.headers['date'].should_not be_nil
+    end
+
+    it "should not set the DATE header just by asking for the canonical_string" do
+      request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+      @request.headers.merge!({
+        'content-type' => 'text/plain',
+        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+      })
+      headers = ApiAuth::Headers.new(request)
+      headers.canonical_string
+      request.headers['date'].should be_nil
+    end
+
+    context "md5_mismatch?" do
+      it "is false if no md5 header is present" do
+        request = Bixby::WebSocket::AsyncRequest.new("/resource.xml?foo=bar&bar=foo")
+        request.headers.merge!({'content-type' => 'text/plain'})
         headers = ApiAuth::Headers.new(request)
         headers.md5_mismatch?.should be_false
       end

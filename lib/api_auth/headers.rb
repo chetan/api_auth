@@ -29,6 +29,8 @@ module ApiAuth
         @request = HttpiRequest.new(request)
       when /Rack::Request/
         @request = RackRequest.new(request)
+      when /Bixby::WebSocket::AsyncRequest/
+        @request = BixbyRequest.new(request)
       else
         raise UnknownHTTPRequest, "#{request.class.to_s} is not yet supported."
       end
