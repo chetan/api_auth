@@ -23,9 +23,7 @@ module ApiAuth
       end
 
       def populate_content_md5
-        if @request.body
-          @request.headers["Content-MD5"] = calculated_md5
-        end
+        @request.headers["Content-MD5"] = calculated_md5
       end
 
       def md5_mismatch?

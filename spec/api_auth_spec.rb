@@ -422,20 +422,25 @@ describe "ApiAuth" do
       describe "md5 header" do
         context "not already provided" do
           it "should calculate for empty string" do
-            request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
+            request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+            request.headers.merge!({
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+            })
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            signed_request['Content-MD5'].should == Digest::MD5.base64digest('')
+            p signed_request.headers
+            signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest('')
           end
 
           it "should calculate for real content" do
-            request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
+            request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+            request.headers.merge!({
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+            })
             request.body = "hello\nworld"
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            signed_request['Content-MD5'].should == Digest::MD5.base64digest("hello\nworld")
+            signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest("hello\nworld")
           end
         end
 
@@ -457,9 +462,11 @@ describe "ApiAuth" do
       end
 
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
-        request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
+        request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+        request.headers.merge!({
           'content-type' => 'text/plain',
-          'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+          'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+        })
         request.body = "hello\nworld"
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
         signed_request.body = "goodbye"
