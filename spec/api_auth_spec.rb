@@ -428,7 +428,6 @@ describe "ApiAuth" do
               'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
             })
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            p signed_request.headers
             signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest('')
           end
 

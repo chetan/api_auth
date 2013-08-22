@@ -242,26 +242,30 @@ describe "ApiAuth::Headers" do
     end
 
     it "should set the DATE header if one is not already present" do
-      @request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
+      @request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+      @request.headers.merge!({
         'content-type' => 'text/plain',
-        'content-md5' => 'e59ff97941044f85df5297e1c302d260')
+        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+      })
       ApiAuth.sign!(@request, "some access id", "some secret key")
-      @request['DATE'].should_not be_nil
+      @request.headers['DATE'].should_not be_nil
     end
 
     it "should not set the DATE header just by asking for the canonical_string" do
-      request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
+      request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+      request.headers.merge!({
         'content-type' => 'text/plain',
-        'content-md5' => 'e59ff97941044f85df5297e1c302d260')
+        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+      })
       headers = ApiAuth::Headers.new(request)
       headers.canonical_string
-      request['DATE'].should be_nil
+      request.headers['DATE'].should be_nil
     end
 
     context "md5_mismatch?" do
       it "is false if no md5 header is present" do
-        request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
-        'content-type' => 'text/plain')
+        request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
+        request.headers.merge!({'content-type' => 'text/plain'})
         headers = ApiAuth::Headers.new(request)
         headers.md5_mismatch?.should be_false
       end
