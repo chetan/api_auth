@@ -12,9 +12,8 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "rake"
   s.add_development_dependency "amatch"
-  s.add_development_dependency "rspec", "~> 2.4.0"
-  s.add_development_dependency "actionpack"
-  s.add_development_dependency "activesupport"
+  s.add_development_dependency "rspec"
+  s.add_development_dependency "rails"
   s.add_development_dependency "activeresource"
   s.add_development_dependency "rest-client", "~> 1.6.0"
   s.add_development_dependency "curb", "~> 0.8.1"
