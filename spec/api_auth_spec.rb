@@ -490,7 +490,7 @@ describe "ApiAuth" do
         @json_req = Bixby::JsonRequest.new("foo", "bar")
         @request = Bixby::SignedJsonRequest.new(@json_req)
         @request.headers.merge!({
-          'content-type' => 'text/plain',
+          'Content-Type' => 'text/plain',
           'content-md5'  => '1B2M2Y8AsgTpgAmY7PhCfg==',
           'date'         => ApiAuth::Helpers.time_as_httpdate
         })
@@ -508,33 +508,33 @@ describe "ApiAuth" do
           it "should calculate for empty string" do
             request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
-              'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'Content-Type' => 'text/plain',
+              'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
             })
             request.body = ""
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            signed_request.headers['content-md5'].should == Digest::MD5.base64digest('')
+            signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest('')
           end
 
           it "should calculate for real content" do
             request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
-              'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'Content-Type' => 'text/plain',
+              'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
             })
             request.body = "hello\nworld"
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            signed_request.headers['content-md5'].should == Digest::MD5.base64digest("hello\nworld")
+            signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest("hello\nworld")
           end
         end
 
-        it "should leave the content-md5 alone if provided" do
-          @signed_request.headers['content-md5'].should == '1B2M2Y8AsgTpgAmY7PhCfg=='
+        it "should leave the Content-MD5 alone if provided" do
+          @signed_request.headers['Content-MD5'].should == '1B2M2Y8AsgTpgAmY7PhCfg=='
         end
       end
 
       it "should sign the request" do
-        @signed_request.headers['authorization'].should == "APIAuth 1044:#{hmac(@secret_key, @request)}"
+        @signed_request.headers['Authorization'].should == "APIAuth 1044:#{hmac(@secret_key, @request)}"
       end
 
       it "should authenticate a valid request" do
@@ -548,8 +548,8 @@ describe "ApiAuth" do
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
         request = Bixby::SignedJsonRequest.new(@json_req)
         request.headers.merge!({
-          'content-type' => 'text/plain',
-          'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+          'Content-Type' => 'text/plain',
+          'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
         })
         request.body = "hello\nworld"
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -558,7 +558,7 @@ describe "ApiAuth" do
       end
 
       it "should NOT authenticate an expired request" do
-        @request.headers['date'] = 16.minutes.ago.utc.httpdate
+        @request.headers['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
         ApiAuth.authentic?(signed_request, @secret_key).should be_false
       end

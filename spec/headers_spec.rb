@@ -278,9 +278,9 @@ describe "ApiAuth::Headers" do
       @json_req = Bixby::JsonRequest.new("foo", "bar")
       @request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
-        'content-type' => 'text/plain',
-        'content-md5'  => 'e59ff97941044f85df5297e1c302d260',
-        'date'         => "Mon, 23 Jan 1984 03:29:56 GMT"
+        'Content-Type' => 'text/plain',
+        'Content-MD5'  => 'e59ff97941044f85df5297e1c302d260',
+        'Date'         => "Mon, 23 Jan 1984 03:29:56 GMT"
       })
       @headers = ApiAuth::Headers.new(@request)
     end
@@ -297,18 +297,18 @@ describe "ApiAuth::Headers" do
     it "should set the DATE header if one is not already present" do
       @request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
-        'content-type' => 'text/plain',
-        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+        'Content-Type' => 'text/plain',
+        'Content-MD5' => 'e59ff97941044f85df5297e1c302d260'
       })
       ApiAuth.sign!(@request, "some access id", "some secret key")
-      @request.headers['date'].should_not be_nil
+      @request.headers['Date'].should_not be_nil
     end
 
     it "should not set the DATE header just by asking for the canonical_string" do
       request = Bixby::SignedJsonRequest.new(@json_req)
       @request.headers.merge!({
-        'content-type' => 'text/plain',
-        'content-md5' => 'e59ff97941044f85df5297e1c302d260'
+        'Content-Type' => 'text/plain',
+        'Content-MD5' => 'e59ff97941044f85df5297e1c302d260'
       })
       headers = ApiAuth::Headers.new(request)
       headers.canonical_string
@@ -318,7 +318,7 @@ describe "ApiAuth::Headers" do
     context "md5_mismatch?" do
       it "is false if no md5 header is present" do
         request = Bixby::SignedJsonRequest.new(@json_req)
-        request.headers.merge!({'content-type' => 'text/plain'})
+        request.headers.merge!({'Content-Type' => 'text/plain'})
         headers = ApiAuth::Headers.new(request)
         headers.md5_mismatch?.should be_false
       end
