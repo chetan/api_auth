@@ -23,6 +23,10 @@ module ApiAuth
       end
 
       def populate_content_md5
+        # Normally we only write an MD5 if the request is either a PUT or a POST
+        # but since we don't have any way to tell for an HTTPI request, we must
+        # ignore any nil body's. In theory, we should never PUT or POST a nil...
+        return if @request.body.nil?
         @request.headers["Content-MD5"] = calculated_md5
       end
 

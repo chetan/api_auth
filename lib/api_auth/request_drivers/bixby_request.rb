@@ -22,6 +22,7 @@ module ApiAuth
       end
 
       def populate_content_md5
+        # Should *always* be a POST!
         @headers["Content-MD5"] = calculated_md5
       end
 
