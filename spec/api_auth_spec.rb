@@ -428,7 +428,8 @@ describe "ApiAuth" do
               'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
             })
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-            signed_request.headers['Content-MD5'].should == Digest::MD5.base64digest('')
+            # for HTTPI only, it should be nil in this case, instead of the md5 of an empty string..
+            signed_request.headers['Content-MD5'].should == nil # Digest::MD5.base64digest('')
           end
 
           it "should calculate for real content" do
