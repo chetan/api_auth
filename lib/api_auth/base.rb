@@ -30,10 +30,16 @@ module ApiAuth
 
     # Determines if the request is authentic given the request and the client's
     # secret key. Returns true if the request is authentic and false otherwise.
+    #
+    # Raises an error if request is too old.
     def authentic?(request, secret_key)
       return false if secret_key.nil?
 
-      return !md5_mismatch?(request) && signatures_match?(request, secret_key) && !request_too_old?(request)
+      if request_too_old?(request) then
+        raise RequestTooOld, "request is more than 900 seconds old"
+      end
+
+      return !md5_mismatch?(request) && signatures_match?(request, secret_key)
     end
 
     # Returns the access id from the request's authorization header

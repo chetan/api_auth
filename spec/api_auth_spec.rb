@@ -52,7 +52,7 @@ describe "ApiAuth" do
           it "should calculate for empty string" do
             request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+              'date' => Time.now.utc.httpdate)
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request['Content-MD5'].should == Digest::MD5.base64digest('')
           end
@@ -60,7 +60,7 @@ describe "ApiAuth" do
           it "should calculate for real content" do
             request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+              'date' => Time.now.utc.httpdate)
             request.body = "hello\nworld"
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request['Content-MD5'].should == Digest::MD5.base64digest("hello\nworld")
@@ -87,7 +87,7 @@ describe "ApiAuth" do
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
         request = Net::HTTP::Put.new("/resource.xml?foo=bar&bar=foo",
           'content-type' => 'text/plain',
-          'date' => "Mon, 23 Jan 1984 03:29:56 GMT")
+          'date' => Time.now.utc.httpdate)
         request.body = "hello\nworld"
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
         signed_request.body = "goodbye"
@@ -97,7 +97,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -126,7 +126,7 @@ describe "ApiAuth" do
         context "not already provided" do
           it "should calculate for empty string" do
             headers = { 'Content-Type' => "text/plain",
-                        'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                        'Date' => Time.now.utc.httpdate }
             request = RestClient::Request.new(:url => "/resource.xml?foo=bar&bar=foo",
               :headers => headers,
               :method => :put)
@@ -136,7 +136,7 @@ describe "ApiAuth" do
 
           it "should calculate for real content" do
             headers = { 'Content-Type' => "text/plain",
-                        'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                        'Date' => Time.now.utc.httpdate }
             request = RestClient::Request.new(:url => "/resource.xml?foo=bar&bar=foo",
               :headers => headers,
               :method => :put,
@@ -165,7 +165,7 @@ describe "ApiAuth" do
 
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
         headers = { 'Content-Type' => "text/plain",
-                    'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                    'Date' => Time.now.utc.httpdate }
         request = RestClient::Request.new(:url => "/resource.xml?foo=bar&bar=foo",
           :headers => headers,
           :method => :put,
@@ -178,7 +178,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request.headers['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -206,7 +206,7 @@ describe "ApiAuth" do
       describe "md5 header" do
         it "should not calculate and add the content-md5 header if not provided" do
           headers = { 'Content-Type' => "text/plain",
-                      'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                      'Date' => Time.now.utc.httpdate }
           request = Curl::Easy.new("/resource.xml?foo=bar&bar=foo") do |curl|
             curl.headers = headers
           end
@@ -234,7 +234,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request.headers['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -268,7 +268,7 @@ describe "ApiAuth" do
               'QUERY_STRING' => 'foo=bar&bar=foo',
               'REQUEST_METHOD' => 'PUT',
               'CONTENT_TYPE' => 'text/plain',
-              'HTTP_DATE' => 'Mon, 23 Jan 1984 03:29:56 GMT')
+              'HTTP_DATE' => Time.now.utc.httpdate)
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request.env['Content-MD5'].should == Digest::MD5.base64digest('')
           end
@@ -279,7 +279,7 @@ describe "ApiAuth" do
               'QUERY_STRING' => 'foo=bar&bar=foo',
               'REQUEST_METHOD' => 'PUT',
               'CONTENT_TYPE' => 'text/plain',
-              'HTTP_DATE' => 'Mon, 23 Jan 1984 03:29:56 GMT',
+              'HTTP_DATE' => Time.now.utc.httpdate,
               'RAW_POST_DATA' => "hello\nworld")
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request.env['Content-MD5'].should == Digest::MD5.base64digest("hello\nworld")
@@ -310,17 +310,17 @@ describe "ApiAuth" do
           'QUERY_STRING' => 'foo=bar&bar=foo',
           'REQUEST_METHOD' => 'PUT',
           'CONTENT_TYPE' => 'text/plain',
-          'HTTP_DATE' => 'Mon, 23 Jan 1984 03:29:56 GMT',
-          'rack.input' => StringIO.new("hello\nworld"))
+          'HTTP_DATE' => Time.now.utc.httpdate,
+          'RAW_POST_DATA' => "hello\nworld")
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
-        signed_request.instance_variable_get("@env")["rack.input"] = StringIO.new("goodbye")
+        signed_request.env["RAW_POST_DATA"] = "goodbye"
         ApiAuth.authentic?(signed_request, @secret_key).should be_false
       end
 
       it "should NOT authenticate an expired request" do
         @request.env['HTTP_DATE'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -347,7 +347,7 @@ describe "ApiAuth" do
         context "not already provided" do
           it "should calculate for empty string" do
             headers = { 'Content-Type' => "text/plain",
-                        'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                        'Date' => Time.now.utc.httpdate }
             request = Rack::Request.new(Rack::MockRequest.env_for("/resource.xml?foo=bar&bar=foo", :method => :put).merge!(headers))
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request.env['Content-MD5'].should == Digest::MD5.base64digest('')
@@ -355,7 +355,7 @@ describe "ApiAuth" do
 
           it "should calculate for real content" do
             headers = { 'Content-Type' => "text/plain",
-                        'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                        'Date' => Time.now.utc.httpdate }
             request = Rack::Request.new(Rack::MockRequest.env_for("/resource.xml?foo=bar&bar=foo", :method => :put, :input => "hellow\nworld").merge!(headers))
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             signed_request.env['Content-MD5'].should == Digest::MD5.base64digest("hellow\nworld")
@@ -381,7 +381,7 @@ describe "ApiAuth" do
 
       it "should NOT authenticate a mismatched content-md5 when body has changed" do
         headers = { 'Content-Type' => "text/plain",
-                    'Date' => "Mon, 23 Jan 1984 03:29:56 GMT" }
+                    'Date' => Time.now.utc.httpdate }
         request = Rack::Request.new(Rack::MockRequest.env_for("/resource.xml?foo=bar&bar=foo", :method => :put, :input => "hellow\nworld").merge!(headers))
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
         changed_request = Rack::Request.new(Rack::MockRequest.env_for("/resource.xml?foo=bar&bar=foo", :method => :put, :input => "goodbye").merge!(headers))
@@ -393,7 +393,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request.env['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -425,7 +425,7 @@ describe "ApiAuth" do
             request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
             request.headers.merge!({
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'date' => Time.now.utc.httpdate
             })
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
             # for HTTPI only, it should be nil in this case, instead of the md5 of an empty string..
@@ -436,7 +436,7 @@ describe "ApiAuth" do
             request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
             request.headers.merge!({
               'content-type' => 'text/plain',
-              'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'date' => Time.now.utc.httpdate
             })
             request.body = "hello\nworld"
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -465,7 +465,7 @@ describe "ApiAuth" do
         request = HTTPI::Request.new("http://localhost/resource.xml?foo=bar&bar=foo")
         request.headers.merge!({
           'content-type' => 'text/plain',
-          'date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+          'date' => Time.now.utc.httpdate
         })
         request.body = "hello\nworld"
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -476,7 +476,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request.headers['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
@@ -510,7 +510,7 @@ describe "ApiAuth" do
             request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
               'Content-Type' => 'text/plain',
-              'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'Date' => Time.now.utc.httpdate
             })
             request.body = ""
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -521,7 +521,7 @@ describe "ApiAuth" do
             request = Bixby::SignedJsonRequest.new(@json_req)
             request.headers.merge!({
               'Content-Type' => 'text/plain',
-              'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+              'Date' => Time.now.utc.httpdate
             })
             request.body = "hello\nworld"
             signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -550,7 +550,7 @@ describe "ApiAuth" do
         request = Bixby::SignedJsonRequest.new(@json_req)
         request.headers.merge!({
           'Content-Type' => 'text/plain',
-          'Date' => "Mon, 23 Jan 1984 03:29:56 GMT"
+          'Date' => Time.now.utc.httpdate
         })
         request.body = "hello\nworld"
         signed_request = ApiAuth.sign!(request, @access_id, @secret_key)
@@ -561,7 +561,7 @@ describe "ApiAuth" do
       it "should NOT authenticate an expired request" do
         @request.headers['Date'] = 16.minutes.ago.utc.httpdate
         signed_request = ApiAuth.sign!(@request, @access_id, @secret_key)
-        ApiAuth.authentic?(signed_request, @secret_key).should be_false
+        expect{ ApiAuth.authentic?(signed_request, @secret_key)}.to raise_error(ApiAuth::RequestTooOld)
       end
 
       it "should retrieve the access_id" do
