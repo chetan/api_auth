@@ -15,4 +15,7 @@ require 'api_auth/request_drivers/bixby_request'
 
 require 'api_auth/headers'
 require 'api_auth/base'
-require 'api_auth/railtie'
+
+if Object.const_defined? :Rails then
+  require 'api_auth/railtie'
+end
